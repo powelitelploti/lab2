@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.IO;
 using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace WindowsFormsApp1
@@ -11,13 +8,12 @@ namespace WindowsFormsApp1
     public class DataSecurityManager
     {
         private OpenFileDialog openFileDialog;
-        private SaveFileDialog saveFileDialog;
+
         public void EncryptFile()
         {
             using (openFileDialog = new OpenFileDialog())
             {
-                openFileDialog.InitialDirectory =
-                Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                openFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
                 openFileDialog.Title = "Выберите файл для шифрования";
                 openFileDialog.Filter = "Все файлы (*.*)|*.*";
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
@@ -29,21 +25,31 @@ namespace WindowsFormsApp1
                         byte[] salt = new byte[32];
                         using (var rng = RandomNumberGenerator.Create())
                         {
-                            rng.GetBytes(salt);
+                            rng.GetBytes(salt); // Генерация случайной соли
                         }
+
                         using (var aes = Aes.Create())
                         {
-                            var key = new Rfc2898DeriveBytes(password, salt, 100000).GetBytes(32);
-                            var iv = new Rfc2898DeriveBytes(password, salt, 100000).GetBytes(16);
+                            var key = new Rfc2898DeriveBytes(password, salt, 100000).GetBytes(32); // Генерация ключа
+                            var iv = new Rfc2898DeriveBytes(password, salt, 100000).GetBytes(16); // Генерация IV
                             aes.Key = key;
                             aes.IV = iv;
+
                             using (var encryptor = aes.CreateEncryptor(aes.Key, aes.IV))
                             {
                                 using (var outputStream = File.Create(filePath + ".enc"))
                                 {
-                                    using (var inputStream = File.OpenRead(filePath))
+                                    // Записываем соль и IV в начало зашифрованного файла
+                                    outputStream.Write(salt, 0, salt.Length);
+                                    outputStream.Write(iv, 0, iv.Length);
+
+                                    // Шифруем данные
+                                    using (var cryptoStream = new CryptoStream(outputStream, encryptor, CryptoStreamMode.Write))
                                     {
-                                        inputStream.CopyTo(outputStream);
+                                        using (var inputStream = File.OpenRead(filePath))
+                                        {
+                                            inputStream.CopyTo(cryptoStream);
+                                        }
                                     }
                                 }
                             }
@@ -53,12 +59,12 @@ namespace WindowsFormsApp1
                 }
             }
         }
+
         public void DecryptFile()
         {
             using (openFileDialog = new OpenFileDialog())
             {
-                openFileDialog.InitialDirectory =
-                Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                openFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
                 openFileDialog.Title = "Выберите зашифрованный файл";
                 openFileDialog.Filter = "Зашифрованные файлы (*.enc)|*.enc";
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
@@ -69,23 +75,27 @@ namespace WindowsFormsApp1
                     {
                         using (var aes = Aes.Create())
                         {
-                            var salt = new byte[32];
-                            var iv = new byte[16];
+                            byte[] salt = new byte[32];
+                            byte[] iv = new byte[16];
+
                             using (var inputStream = File.OpenRead(encryptedFilePath))
                             {
+                                // Читаем соль и IV из начала зашифрованного файла
                                 inputStream.Read(salt, 0, salt.Length);
                                 inputStream.Read(iv, 0, iv.Length);
-                                var key = new Rfc2898DeriveBytes(password, salt, 100000).GetBytes(32);
+
+                                var key = new Rfc2898DeriveBytes(password, salt, 100000).GetBytes(32); // Генерация ключа
                                 aes.Key = key;
                                 aes.IV = iv;
+
                                 using (var decryptor = aes.CreateDecryptor(aes.Key, aes.IV))
                                 {
                                     using (var outputStream = File.Create(encryptedFilePath + ".dec"))
                                     {
-                                        using (var stream = new CryptoStream(outputStream, decryptor,
-                                        CryptoStreamMode.Write))
+                                        // Расшифровываем данные
+                                        using (var cryptoStream = new CryptoStream(inputStream, decryptor, CryptoStreamMode.Read))
                                         {
-                                            inputStream.CopyTo(stream);
+                                            cryptoStream.CopyTo(outputStream);
                                         }
                                     }
                                 }
@@ -96,6 +106,7 @@ namespace WindowsFormsApp1
                 }
             }
         }
+
         private string GetPassword()
         {
             using (var passwordForm = new PasswordForm())

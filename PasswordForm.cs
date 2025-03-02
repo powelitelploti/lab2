@@ -10,7 +10,7 @@ using System.Windows.Forms;
 
 namespace WindowsFormsApp1
 {
-    public class PasswordForm : Form
+    public partial class PasswordForm : Form
     {
         private TextBox passwordTextBox;
         private Button okButton;
@@ -20,7 +20,7 @@ namespace WindowsFormsApp1
         {
             this.Text = "Введите пароль";
             this.Width = 300;
-            this.Height = 100;
+            this.Height = 150;
             CreateControls();
         }
         private void CreateControls()

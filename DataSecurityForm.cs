@@ -42,4 +42,5 @@ namespace WindowsFormsApp1
             this.Controls.Add(encryptButton);
             this.Controls.Add(decryptButton);
         }
-    
+    }
+}

@@ -1,6 +1,6 @@
 ﻿namespace WindowsFormsApp1
 {
-    partial class Form1
+    partial class PasswordForm
     {
         /// <summary>
         /// Обязательная переменная конструктора.
@@ -10,8 +10,8 @@
         /// <summary>
         /// Освободить все используемые ресурсы.
         /// </summary>
-        /// <param name="disposing">истинно, если управляемый ресурс должен быть удален; иначе ложно.</param>
-        protected override void Dispose(bool disposing)
+      
+        public void Dispose(bool disposing)
         {
             if (disposing && (components != null))
             {
