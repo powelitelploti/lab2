@@ -46,6 +46,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataSecurityForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="DataSecurityForm.Designer.cs">
+      <DependentUpon>DataSecurityForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="DataSecurityManager.cs" />
     <Compile Include="PasswordForm.cs">
       <SubType>Form</SubType>
